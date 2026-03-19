@@ -1,12 +1,12 @@
 {
-    "owner": {
-        "username": "hoaithuongk32000-dev",
-        "email": "hoaithuongk32000@gmail.com"
-    },
-    "record": {
-        "NS": [
-            "quentin.ns.cloudflare.com",
-            "diana.ns.cloudflare.com"
-        ]
-    }
+  "owner": {
+    "username": "hoaithuongk32000-del",
+    "email": "hoaithuongk32000@gmail.com"
+  },
+  "record": {
+    "NS": [
+      "quentin.ns.cloudflare.com",
+      "diana.ns.cloudflare.com"
+    ]
+  }
 }
