@@ -9,10 +9,6 @@
         "value": "222.253.243.155",
         "proxied": true
       }
-    ],
-    "NS": [
-      "quentin.ns.cloudflare.com",
-      "diana.ns.cloudflare.com"
     ]
   }
 }
