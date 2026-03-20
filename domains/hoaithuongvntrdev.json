@@ -4,8 +4,11 @@
     "email": "hoaithuongk32000@gmail.com"
   },
   "records": {
-    "A": [
-      "222.253.243.155"
-    ]
+    "A": ["222.253.243.155"],
+    "NS": [
+      "quentin.ns.cloudflare.com",
+      "diana.ns.cloudflare.com"
+    ],
+    "proxied": true
   }
 }
