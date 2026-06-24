@@ -13,6 +13,10 @@ on:
 
     workflow_dispatch:
 
+permissions:
+    contents: read
+    pull-requests: read
+
 concurrency:
     group: ${{ github.ref }}-ci
 
@@ -21,30 +25,34 @@ jobs:
         name: Tests
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
             - run: npm install
 
             - name: Fetch PR information
               if: github.event_name == 'pull_request'
               run: |
-                  echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_ENV
-                  echo "PR_AUTHOR_ID=${{ github.event.pull_request.user.id }}" >> $GITHUB_ENV
+                  echo "PR_AUTHOR=$PR_AUTHOR_LOGIN" >> $GITHUB_ENV
+                  echo "PR_AUTHOR_ID=$PR_AUTHOR_ID_INPUT" >> $GITHUB_ENV
 
-                  LABELS=$(gh api --jq '[.labels[].name]' /repos/{owner}/{repo}/pulls/${{ github.event.number }})
+                  LABELS=$(gh api --jq '[.labels[].name]' /repos/{owner}/{repo}/pulls/$PR_NUMBER)
                   echo "PR_LABELS=$LABELS" >> $GITHUB_ENV
 
-                  FILES=$(gh api --jq '[.[] | select(.status != "removed") | .filename]' /repos/{owner}/{repo}/pulls/${{ github.event.number }}/files)
+                  FILES=$(gh api --jq '[.[] | select(.status != "removed") | .filename]' /repos/{owner}/{repo}/pulls/$PR_NUMBER/files)
                   echo "CHANGED_FILES=$FILES" >> $GITHUB_ENV
 
-                  REMOVED_FILE_DATA=$(gh api --jq '[.[] | select(.status == "removed") | {name: .filename, data: .patch}]' /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files)
+                  REMOVED_FILE_DATA=$(gh api --jq '[.[] | select(.status == "removed") | {name: .filename, data: .patch}]' /repos/$REPO_NAME/pulls/$PR_NUMBER/files)
                   echo "DELETED_FILES=$REMOVED_FILE_DATA" >> $GITHUB_ENV
               env:
                   GH_TOKEN: ${{ github.token }}
+                  PR_AUTHOR_LOGIN: ${{ github.event.pull_request.user.login }}
+                  PR_AUTHOR_ID_INPUT: ${{ github.event.pull_request.user.id }}
+                  PR_NUMBER: ${{ github.event.number }}
+                  REPO_NAME: ${{ github.repository }}
 
             - name: Run DNSControl tests
               if: github.event_name == 'pull_request' && contains(fromJson(env.CHANGED_FILES), 'dnsconfig.js')
-              uses: is-a-dev/dnscontrol-action@main
+              uses: is-a-dev/dnscontrol-action@f496eda4e34fc2bcb6ac8b776501ee486af3dbfe # main
               with:
                   args: check
 
