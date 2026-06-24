@@ -13,44 +13,22 @@ const reserved = require(path.join(__dirname, "reserved.json"));
 
 const v2 = [];
 
-for (const subdomain of internal) {
-    const commonData = {
+function buildSystemEntry(subdomain, records, extraFields) {
+    return {
         domain: `${subdomain}.is-a.dev`,
         subdomain: subdomain,
-        owner: {
-            username: "is-a-dev"
-        }
-    };
-
-    const records = {
-        CNAME: "internal.is-a.dev"
-    };
-
-    v2.push({
-        ...commonData,
+        owner: { username: "is-a-dev" },
         records: records,
-        internal: true
-    });
+        ...extraFields
+    };
+}
+
+for (const subdomain of internal) {
+    v2.push(buildSystemEntry(subdomain, { CNAME: "internal.is-a.dev" }, { internal: true }));
 }
 
 for (const subdomain of reserved) {
-    const commonData = {
-        domain: `${subdomain}.is-a.dev`,
-        subdomain: subdomain,
-        owner: {
-            username: "is-a-dev"
-        }
-    };
-
-    const records = {
-        URL: "https://is-a.dev/reserved"
-    };
-
-    v2.push({
-        ...commonData,
-        records: records,
-        reserved: true
-    });
+    v2.push(buildSystemEntry(subdomain, { URL: "https://is-a.dev/reserved" }, { reserved: true }));
 }
 
 fs.readdir(directoryPath, function (err, files) {

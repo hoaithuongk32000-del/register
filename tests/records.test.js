@@ -1,31 +1,11 @@
 const t = require("ava");
-const fs = require("fs-extra");
-const path = require("path");
 
 const validRecordTypes = new Set(["A", "AAAA", "CAA", "CNAME", "DS", "MX", "NS", "SRV", "TLSA", "TXT", "URL"]);
-const hostnameRegex = /^(?=.{1,253}$)(?:(?:[_a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)\.)+[a-zA-Z]{2,63}$/;
 const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$/;
 const ipv6Regex =
     /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,7}:$|^(?:[0-9a-fA-F]{1,4}:){0,6}::(?:[0-9a-fA-F]{1,4}:){0,5}[0-9a-fA-F]{1,4}$/;
 
-const domainsPath = path.resolve("domains");
-const files = fs.readdirSync(domainsPath).filter((file) => file.endsWith(".json"));
-
-const domainCache = {};
-
-function getDomainData(file) {
-    if (domainCache[file]) {
-        return domainCache[file];
-    }
-
-    try {
-        const data = fs.readJsonSync(path.join(domainsPath, file));
-        domainCache[file] = data;
-        return data;
-    } catch (error) {
-        throw new Error(`Failed to read JSON for ${file}: ${error.message}`);
-    }
-}
+const { domainFiles: files, getDomainData, getSubdomain, hostnameRegex } = require("./helpers");
 
 function expandIPv6(ip) {
     let segments = ip.split(":");
@@ -91,7 +71,7 @@ function isValidHexadecimal(value) {
 const disallowedCNAMEs = require("../util/disallowed-cnames.json");
 
 function validateRecordValues(t, data, file) {
-    const subdomain = file.replace(/\.json$/, "");
+    const subdomain = getSubdomain(file);
 
     Object.entries(data.records).forEach(([key, value]) => {
         // General validation for arrays
@@ -330,7 +310,7 @@ t("Root subdomains should have at least one usable record", (t) => {
     const usableRecordTypes = ["A", "AAAA", "CNAME", "MX", "NS", "URL"];
 
     files.forEach((file) => {
-        const subdomain = file.replace(/\.json$/, "");
+        const subdomain = getSubdomain(file);
         if (subdomain.includes(".") || subdomain.startsWith("_")) return;
 
         const data = getDomainData(file);

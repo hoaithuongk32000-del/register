@@ -2,6 +2,8 @@ const t = require("ava");
 const fs = require("fs-extra");
 const path = require("path");
 
+const { domainsPath, hostnameRegex, getSubdomain } = require("./helpers");
+
 const ignoredRootJSONFiles = ["package-lock.json", "package.json"];
 
 const requiredFields = {
@@ -30,12 +32,10 @@ const optionalRedirectConfigFields = {
 const blockedFields = ["domain", "internal", "proxy", "reserved", "services", "subdomain"];
 
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-const hostnameRegex = /^(?=.{1,253}$)(?:(?:[_a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)\.)+[a-zA-Z]{2,63}$/;
 
 const internalDomains = require("../util/internal.json");
 const reservedDomains = require("../util/reserved.json");
 
-const domainsPath = path.resolve("domains");
 const files = fs.readdirSync(domainsPath);
 
 function findDuplicateKeys(jsonString) {
@@ -99,7 +99,7 @@ async function validateFileName(t, file) {
     t.true(file === file.toLowerCase(), `${file}: File name should be all lowercase`);
     t.false(file.includes("--"), `${file}: File name should not contain consecutive hyphens`);
 
-    const subdomain = file.replace(/\.json$/, "");
+    const subdomain = getSubdomain(file);
 
     t.regex(
         subdomain + ".is-a.dev",

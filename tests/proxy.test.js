@@ -1,24 +1,8 @@
 const t = require("ava");
-const fs = require("fs-extra");
-const path = require("path");
 
 const requiredRecordsToProxy = new Set(["A", "AAAA", "CNAME"]);
 
-const domainCache = {};
-
-function getDomainData(file) {
-    if (domainCache[file]) {
-        return domainCache[file];
-    }
-
-    try {
-        const data = fs.readJsonSync(path.join(domainsPath, file));
-        domainCache[file] = data;
-        return data;
-    } catch (error) {
-        throw new Error(`Failed to read JSON for ${file}: ${error.message}`);
-    }
-}
+const { domainFiles: files, getDomainData } = require("./helpers");
 
 function validateProxiedRecords(t, data, file) {
     const recordTypes = Array.from(requiredRecordsToProxy).join(", ");
@@ -39,8 +23,6 @@ function validateProxiedRecords(t, data, file) {
     }
 }
 
-const domainsPath = path.resolve("domains");
-const files = fs.readdirSync(domainsPath).filter((file) => file.endsWith(".json"));
 
 t("Domains with proxy enabled must have at least one proxy-able record", (t) => {
     files.forEach((file) => {
