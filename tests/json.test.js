@@ -1,6 +1,7 @@
 const t = require("ava");
 const fs = require("fs-extra");
 const path = require("path");
+const { emailRegex, hostnameRegex, findDuplicateKeys } = require("../util/validators");
 
 const ignoredRootJSONFiles = ["package-lock.json", "package.json"];
 
@@ -29,57 +30,13 @@ const optionalRedirectConfigFields = {
 
 const blockedFields = ["domain", "internal", "proxy", "reserved", "services", "subdomain"];
 
-const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-const hostnameRegex = /^(?=.{1,253}$)(?:(?:[_a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)\.)+[a-zA-Z]{2,63}$/;
-
 const internalDomains = require("../util/internal.json");
 const reservedDomains = require("../util/reserved.json");
 
 const domainsPath = path.resolve("domains");
 const files = fs.readdirSync(domainsPath);
 
-function findDuplicateKeys(jsonString) {
-    const duplicateKeys = new Set();
-    const keyStack = [];
 
-    const keyRegex = /"(.*?)"\s*:/g;
-
-    let i = 0;
-    while (i < jsonString.length) {
-        const char = jsonString[i];
-
-        if (char === "{") {
-            keyStack.push({});
-            i++;
-            continue;
-        }
-
-        if (char === "}") {
-            keyStack.pop();
-            i++;
-            continue;
-        }
-
-        keyRegex.lastIndex = i;
-        const match = keyRegex.exec(jsonString);
-        if (match && match.index === i && keyStack.length > 0) {
-            const key = match[1];
-            const currentScope = keyStack[keyStack.length - 1];
-
-            if (currentScope[key]) {
-                duplicateKeys.add(key);
-            } else {
-                currentScope[key] = true;
-            }
-
-            i = keyRegex.lastIndex;
-        } else {
-            i++;
-        }
-    }
-
-    return [...duplicateKeys];
-}
 
 async function validateFields(t, obj, fields, file, prefix = "") {
     for (const key of Object.keys(fields)) {
